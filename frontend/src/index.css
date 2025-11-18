@@ -1,0 +1,210 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-slate-800;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    margin: 0;
+    min-height: 100vh;
+  }
+
+  /* Root app container */
+  #root {
+    @apply min-h-screen;
+  }
+
+  /* Monospace for all numbers */
+  .font-mono,
+  [data-numeric="true"] {
+    font-variant-numeric: tabular-nums;
+    @apply tracking-tight;
+  }
+
+  /* Remove default heading styles */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans;
+  }
+}
+
+@layer components {
+  /* Data flash animation on update */
+  .data-flash {
+    animation: flash 0.5s ease-in-out;
+  }
+
+  /* No rounded corners on data tables */
+  .data-table {
+    @apply rounded-none border border-slate-800 bg-slate-900;
+  }
+
+  .data-table thead {
+    @apply bg-slate-900 border-b border-slate-800 sticky top-0;
+  }
+
+  .data-table th {
+    @apply text-xs uppercase tracking-wider text-slate-500 font-normal;
+    @apply px-3 py-2 text-left;
+  }
+
+  .data-table td {
+    @apply px-3 py-2 text-sm font-mono border-b border-slate-800;
+  }
+
+  .data-table tbody tr:hover {
+    @apply bg-slate-800/50;
+  }
+
+  /* Tight spacing for information density */
+  .info-dense {
+    @apply p-3 space-y-2;
+  }
+
+  .info-dense-xs {
+    @apply p-2 space-y-1;
+  }
+
+  /* Panel styles */
+  .panel {
+    @apply border border-slate-800 bg-slate-900;
+  }
+
+  .panel-header {
+    @apply sticky top-0 bg-slate-900 border-b border-slate-800 p-2;
+    @apply text-xs font-semibold uppercase tracking-widest;
+  }
+
+  /* Active panel indicator */
+  .panel-active {
+    @apply border-l-2 border-l-cyan-500;
+  }
+
+  /* Ticker styles */
+  .ticker-item {
+    @apply px-4 text-xs border-l border-slate-800;
+  }
+
+  /* Oracle command input styles */
+  .command-input {
+    @apply border-2 border-slate-700 focus:border-cyan-500;
+    @apply bg-slate-950 font-mono transition-colors;
+  }
+
+  .command-input:focus {
+    @apply outline-none ring-0;
+  }
+
+  /* Custom scrollbar for dark theme */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-slate-900;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-700 rounded;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-600;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply bg-cyan-500 text-slate-900 hover:bg-cyan-600;
+    @apply px-4 py-2 font-medium transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-700 text-slate-100 hover:bg-slate-600;
+    @apply px-4 py-2 font-medium transition-colors;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-slate-400 hover:bg-slate-800 hover:text-slate-100;
+    @apply px-4 py-2 font-medium transition-colors;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-slate-900 border border-slate-800;
+  }
+
+  .card-header {
+    @apply border-b border-slate-800 p-4;
+  }
+
+  .card-body {
+    @apply p-4;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2 py-1 text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply bg-cyan-500/10 text-cyan-400 border border-cyan-500/20;
+  }
+
+  .badge-positive {
+    @apply bg-amber-500/10 text-amber-400 border border-amber-500/20;
+  }
+
+  .badge-negative {
+    @apply bg-red-500/10 text-red-400 border border-red-500/20;
+  }
+}
+
+@layer utilities {
+  /* Text color utilities */
+  .text-positive {
+    @apply text-amber-400;
+  }
+
+  .text-negative {
+    @apply text-red-400;
+  }
+
+  .text-neutral {
+    @apply text-cyan-400;
+  }
+
+  /* Background utilities */
+  .bg-positive {
+    @apply bg-amber-500;
+  }
+
+  .bg-negative {
+    @apply bg-red-500;
+  }
+
+  /* Pause animation on hover */
+  .pause-on-hover:hover {
+    animation-play-state: paused;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

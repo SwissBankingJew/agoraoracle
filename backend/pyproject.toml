@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "backend"
+version = "0.1.0"
+description = "FastAPI backend with SQLModel and PostgreSQL"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "sqlmodel>=0.0.20",
+    "asyncpg>=0.29",
+    "psycopg[binary]>=3.2",
+    "uvicorn[standard]>=0.30",
+    "python-dotenv>=1.0",
+    "pydantic-settings>=2.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.26",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
