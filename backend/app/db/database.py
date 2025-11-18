@@ -31,7 +31,14 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
-    """Initialize database tables"""
+    """Initialize database tables
+
+    Note: For production, use Alembic migrations instead:
+        alembic upgrade head
+
+    This function uses SQLModel.metadata.create_all which is convenient
+    for development but doesn't handle migrations properly.
+    """
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 

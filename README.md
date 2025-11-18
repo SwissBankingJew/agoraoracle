@@ -232,13 +232,56 @@ docker-compose down
 
 ## Database Migrations
 
-SQLModel automatically creates tables on startup from the models. For more complex migrations, consider using Alembic:
+This project uses **Alembic** for database schema migrations. Alembic tracks schema changes and allows safe, reversible migrations in production.
+
+### Current Setup
+
+- **Development**: SQLModel automatically creates/updates tables on startup (via `init_db()`)
+- **Production**: Use Alembic migrations for controlled schema changes
+
+### Common Alembic Commands
 
 ```bash
 cd backend
-uv run pip install alembic
-uv run alembic init alembic
+
+# Check current migration status
+uv run alembic current
+
+# Apply all pending migrations
+uv run alembic upgrade head
+
+# Create a new migration after changing models
+uv run alembic revision --autogenerate -m "Description of changes"
+
+# Rollback the last migration
+uv run alembic downgrade -1
+
+# View migration history
+uv run alembic history
+
+# Rollback all migrations
+uv run alembic downgrade base
 ```
+
+### Making Schema Changes
+
+1. **Update your SQLModel models** in `backend/app/models/`
+2. **Generate a migration**:
+   ```bash
+   uv run alembic revision --autogenerate -m "Add new field to User model"
+   ```
+3. **Review the generated migration** in `backend/alembic/versions/`
+4. **Apply the migration**:
+   ```bash
+   uv run alembic upgrade head
+   ```
+
+### Notes
+
+- Migrations read `DATABASE_URL` from your environment (`.env` file)
+- The initial migration captures the current schema (users and waitlist tables)
+- Always review auto-generated migrations before applying them
+- For production deployments, run `alembic upgrade head` instead of relying on `init_db()`
 
 ## Useful Commands
 
