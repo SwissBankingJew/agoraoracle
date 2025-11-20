@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import type { GameState, Bet, BetDirection, BetAmount } from '@/types/game';
 
 const INITIAL_BANKROLL = 1000;
@@ -8,6 +8,7 @@ const SETTLEMENT_DELAY = 3000; // 3 seconds
 
 interface UseWaitlistGameProps {
   currentPrice: number | null;
+  currentPriceRef: React.MutableRefObject<number | null>;
   isConnected: boolean;
   initialState?: Partial<GameState>;
 }
@@ -34,6 +35,7 @@ interface UseWaitlistGameReturn {
  */
 export function useWaitlistGame({
   currentPrice,
+  currentPriceRef,
   isConnected,
   initialState
 }: UseWaitlistGameProps): UseWaitlistGameReturn {
@@ -72,8 +74,8 @@ export function useWaitlistGame({
 
   /**
    * Evaluate bet outcome
-   * TODO: Implement evaluation logic
-   * - Compare entry vs exit price
+   * Uses epsilon-based comparison to handle floating-point precision
+   * - Compare entry vs exit price with tolerance
    * - Check direction
    * - Return win/loss/tie
    */
@@ -82,15 +84,22 @@ export function useWaitlistGame({
     entryPrice: number,
     exitPrice: number
   ): 'win' | 'loss' | 'tie' => {
-    // TODO: Implement
-    if (exitPrice === entryPrice) {
-      return 'tie'; // No price movement
+    // Price tolerance threshold - $0.01 is negligible for Bitcoin prices
+    const PRICE_TOLERANCE = 0.01;
+
+    const priceDiff = exitPrice - entryPrice;
+    const absDiff = Math.abs(priceDiff);
+
+    // Check if prices are essentially equal (within tolerance)
+    if (absDiff < PRICE_TOLERANCE) {
+      return 'tie'; // No meaningful price movement
     }
 
+    // Determine win/loss based on direction and price movement
     if (direction === 'UP') {
-      return exitPrice > entryPrice ? 'win' : 'loss';
+      return priceDiff > 0 ? 'win' : 'loss';
     } else {
-      return exitPrice < entryPrice ? 'win' : 'loss';
+      return priceDiff < 0 ? 'win' : 'loss';
     }
   }, []);
 
@@ -118,13 +127,15 @@ export function useWaitlistGame({
   /**
    * Settle the active bet
    * Uses functional state updates to avoid stale closure bugs
-   * - Get current price
+   * Uses ref for current price to avoid stale closure on price
+   * - Get current price from ref (always latest)
    * - Evaluate outcome
    * - Calculate payout
    * - Update game state
    */
   const settleBet = useCallback(() => {
-    if (!currentPrice) return;
+    const exitPrice = currentPriceRef.current;
+    if (!exitPrice) return;
 
     // Use functional state update to access latest state
     setGameState(prev => {
@@ -132,7 +143,6 @@ export function useWaitlistGame({
       if (!prev.activeBet) return prev;
 
       const bet = prev.activeBet;
-      const exitPrice = currentPrice;
       const result = evaluateBet(bet.direction, bet.entryPrice, exitPrice);
       const payout = calculatePayout(bet.amount, result);
       const pnl = payout - bet.amount;
@@ -143,7 +153,7 @@ export function useWaitlistGame({
         exitPrice,
         exitTime: Date.now(),
         status: 'settled',
-        result: result === 'tie' ? 'loss' : result, // Treat tie as loss for stats (but with refund)
+        result, // Store actual result (win/loss/tie)
         pnl
       };
 
@@ -155,10 +165,10 @@ export function useWaitlistGame({
         betHistory: [completedBet, ...prev.betHistory].slice(0, 5), // Keep last 5
         totalBets: prev.totalBets + 1,
         wins: prev.wins + (result === 'win' ? 1 : 0),
-        losses: prev.losses + (result === 'win' ? 0 : 1), // Tie counts as loss
+        losses: prev.losses + (result === 'loss' ? 1 : 0), // Only count actual losses
         winRate: calculateWinRate(
           prev.wins + (result === 'win' ? 1 : 0),
-          prev.totalBets + 1
+          prev.losses + (result === 'loss' ? 1 : 0)
         )
       };
     });
@@ -173,12 +183,14 @@ export function useWaitlistGame({
       countdownTimerRef.current = null;
     }
     setTimeRemaining(0);
-  }, [currentPrice, evaluateBet, calculatePayout]);
+  }, [currentPriceRef, evaluateBet, calculatePayout]);
 
   /**
    * Calculate win rate percentage
+   * Only counts wins vs losses (excludes ties from calculation)
    */
-  const calculateWinRate = (wins: number, total: number): number => {
+  const calculateWinRate = (wins: number, losses: number): number => {
+    const total = wins + losses;
     if (total === 0) return 0;
     return Math.round((wins / total) * 100);
   };

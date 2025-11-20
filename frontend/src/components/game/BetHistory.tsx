@@ -39,8 +39,11 @@ const BetHistory: React.FC<BetHistoryProps> = ({ betHistory }) => {
                     {bet.direction} ${bet.amount}
                   </span>
                   <span className={`font-mono ${
-                    bet.result === 'win' ? 'text-positive' : 'text-negative'
+                    bet.result === 'win' ? 'text-positive' :
+                    bet.result === 'tie' ? 'text-muted-foreground' :
+                    'text-negative'
                   }`}>
+                    {bet.result === 'tie' && '≈ '}
                     {bet.pnl && bet.pnl > 0 ? '+' : ''}{bet.pnl?.toFixed(2) || '0.00'}
                   </span>
                 </div>

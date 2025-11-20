@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Scatter } from 'recharts';
 import type { PricePoint, Bet } from '@/types/game';
 
 interface PriceChartProps {
@@ -24,6 +24,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
 }) => {
   /**
    * Enrich price history with highlight flag for last 3 seconds
+   * Also add bet entry marker if this point matches the bet time
    */
   const enrichedData = useMemo(() => {
     if (priceHistory.length === 0) return [];
@@ -33,9 +34,11 @@ const PriceChart: React.FC<PriceChartProps> = ({
 
     return priceHistory.map(point => ({
       ...point,
-      highlightPrice: point.timestamp >= threeSecondsAgo ? point.price : null
+      highlightPrice: point.timestamp >= threeSecondsAgo ? point.price : null,
+      // Add bet marker if this is closest to bet entry time
+      betMarker: activeBet && Math.abs(point.timestamp - activeBet.entryTime) < 500 ? activeBet.entryPrice : null
     }));
-  }, [priceHistory]);
+  }, [priceHistory, activeBet]);
 
   /**
    * Calculate data for last 3 seconds (for marker)
@@ -56,6 +59,36 @@ const PriceChart: React.FC<PriceChartProps> = ({
     if (last3SecondsData.length === 0) return null;
     return last3SecondsData[0];
   }, [last3SecondsData]);
+
+  /**
+   * Find the data point closest to the bet entry time
+   */
+  const betEntryPoint = useMemo(() => {
+    if (!activeBet || enrichedData.length === 0) return null;
+
+    // Find the closest data point to the entry time
+    const closestPoint = enrichedData.reduce((closest, point) => {
+      const currentDiff = Math.abs(point.timestamp - activeBet.entryTime);
+      const closestDiff = Math.abs(closest.timestamp - activeBet.entryTime);
+      return currentDiff < closestDiff ? point : closest;
+    }, enrichedData[0]);
+
+    console.log('Bet Entry Point:', {
+      betTime: new Date(activeBet.entryTime).toISOString(),
+      closestTime: closestPoint.time,
+      diff: Math.abs(closestPoint.timestamp - activeBet.entryTime)
+    });
+
+    return closestPoint;
+  }, [activeBet, enrichedData]);
+
+  /**
+   * Get bet marker colors based on direction
+   */
+  const betMarkerColor = useMemo(() => {
+    if (!activeBet) return null;
+    return activeBet.direction === 'UP' ? '#10b981' : '#ef4444'; // green : red
+  }, [activeBet]);
 
   /**
    * Calculate minute reference price (price at start of current minute)
@@ -147,7 +180,10 @@ const PriceChart: React.FC<PriceChartProps> = ({
                   borderRadius: '4px'
                 }}
                 labelStyle={{ color: '#6b7280' }}
-                formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
+                formatter={(value: any) => {
+                  if (value === null || value === undefined) return null;
+                  return [`$${Number(value).toFixed(2)}`, 'Price'];
+                }}
               />
 
               {/* Minute Reference Line (amber dashed) */}
@@ -181,19 +217,34 @@ const PriceChart: React.FC<PriceChartProps> = ({
                 />
               )}
 
-              {/* Bet Entry Marker */}
-              {activeBet && (
-                <ReferenceLine
-                  y={activeBet.entryPrice}
-                  stroke="#06b6d4"
-                  strokeWidth={2}
-                  label={{
-                    value: 'Entry',
-                    position: 'insideTopLeft',
-                    fill: '#06b6d4',
-                    fontSize: 10
-                  }}
-                />
+              {/* Bet Entry Marker - Fat Dot at entry point */}
+              {activeBet && betMarkerColor && (
+                <>
+                  {/* Scatter plot for bet entry marker */}
+                  <Scatter
+                    name="Bet Entry"
+                    dataKey="betMarker"
+                    fill={betMarkerColor}
+                    shape="circle"
+                    isAnimationActive={false}
+                  />
+
+                  {/* Horizontal Line - Entry Price */}
+                  <ReferenceLine
+                    y={activeBet.entryPrice}
+                    stroke={betMarkerColor}
+                    strokeWidth={2}
+                    strokeDasharray="3 3"
+                    label={{
+                      value: `${activeBet.direction} $${activeBet.amount} @ $${activeBet.entryPrice.toLocaleString()}`,
+                      position: 'insideTopLeft',
+                      fill: betMarkerColor,
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      fontFamily: 'JetBrains Mono'
+                    }}
+                  />
+                </>
               )}
 
               {/* Shaded Area for Last 3 Seconds - highlightPrice is only set for last 3s */}

@@ -13,6 +13,7 @@ export default function HeroSection() {
   // WebSocket connection for real-time BTC prices
   const {
     currentPrice,
+    currentPriceRef,
     priceHistory,
     isConnected,
     error,
@@ -28,6 +29,7 @@ export default function HeroSection() {
     timeRemaining
   } = useWaitlistGame({
     currentPrice,
+    currentPriceRef,
     isConnected,
     initialState: loadGameState() || undefined
   })

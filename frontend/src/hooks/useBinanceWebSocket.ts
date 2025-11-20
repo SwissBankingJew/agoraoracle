@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import type { PricePoint, BinanceTradeEvent } from '@/types/game';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import type { PricePoint, BinanceKlineEvent } from '@/types/game';
 
-const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws/btcusdt@trade';
+const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws/btcusdt@kline_1s';
 const BINANCE_API_URL = 'https://api.binance.com/api/v3/klines';
 const MAX_PRICE_HISTORY = 1000;
 
 interface UseBinanceWebSocketReturn {
   currentPrice: number | null;
+  currentPriceRef: React.MutableRefObject<number | null>;
   priceHistory: PricePoint[];
   isConnected: boolean;
   error: string | null;
@@ -33,6 +34,7 @@ export function useBinanceWebSocket(): UseBinanceWebSocketReturn {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const reconnectTimeoutRef = useRef<number | null>(null);
+  const currentPriceRef = useRef<number | null>(null);
 
   /**
    * Fetch historical kline data from Binance REST API
@@ -103,12 +105,18 @@ export function useBinanceWebSocket(): UseBinanceWebSocketReturn {
    * - Add to history
    */
   const handleMessage = useCallback((event: MessageEvent) => {
-    // TODO: Implement
     try {
-      const data: BinanceTradeEvent = JSON.parse(event.data);
-      const price = parseFloat(data.p);
+      const data: BinanceKlineEvent = JSON.parse(event.data);
 
-      setCurrentPrice(price);
+      // Only process closed candles for consistent timing
+      if (!data.k.x) {
+        return; // Skip incomplete candles
+      }
+
+      const price = parseFloat(data.k.c); // Close price
+
+      setCurrentPrice(price); // For UI display
+      currentPriceRef.current = price; // For settlement (always latest)
       addPriceToHistory(price);
       setError(null);
     } catch (err) {
@@ -190,6 +198,7 @@ export function useBinanceWebSocket(): UseBinanceWebSocketReturn {
 
     setIsConnected(false);
     setCurrentPrice(null);
+    currentPriceRef.current = null;
     setPriceHistory([]);
   }, []);
 
@@ -205,6 +214,7 @@ export function useBinanceWebSocket(): UseBinanceWebSocketReturn {
 
   return {
     currentPrice,
+    currentPriceRef,
     priceHistory,
     isConnected,
     error,
