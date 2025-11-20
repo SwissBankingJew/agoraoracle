@@ -1,5 +1,4 @@
 // Barrel exports for game components
-export { default as WaitlistOverlay } from './WaitlistOverlay';
 export { default as PriceChart } from './PriceChart';
 export { default as BettingControls } from './BettingControls';
 export { default as GameStats } from './GameStats';

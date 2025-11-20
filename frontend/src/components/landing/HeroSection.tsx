@@ -25,7 +25,6 @@ export default function HeroSection() {
     gameState,
     placeBet,
     canPlaceBet,
-    isSettling,
     timeRemaining
   } = useWaitlistGame({
     currentPrice,

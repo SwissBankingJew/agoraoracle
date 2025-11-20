@@ -4,7 +4,6 @@ import type { PricePoint, BinanceTradeEvent } from '@/types/game';
 const BINANCE_WS_URL = 'wss://stream.binance.com:9443/ws/btcusdt@trade';
 const BINANCE_API_URL = 'https://api.binance.com/api/v3/klines';
 const MAX_PRICE_HISTORY = 1000;
-const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]; // Exponential backoff
 
 interface UseBinanceWebSocketReturn {
   currentPrice: number | null;
@@ -33,7 +32,7 @@ export function useBinanceWebSocket(): UseBinanceWebSocketReturn {
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
   /**
    * Fetch historical kline data from Binance REST API

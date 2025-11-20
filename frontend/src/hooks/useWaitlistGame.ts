@@ -67,8 +67,8 @@ export function useWaitlistGame({
 
   const [timeRemaining, setTimeRemaining] = useState(0);
 
-  const settlementTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const settlementTimerRef = useRef<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
 
   /**
    * Evaluate bet outcome
