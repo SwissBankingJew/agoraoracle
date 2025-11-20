@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
+import { useGameStatePersistence } from '@/hooks/useGameStatePersistence'
 
 interface WaitlistStats {
   total_signups: number
@@ -11,6 +12,12 @@ interface WaitlistStats {
 export default function SignupSection() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+
+  // localStorage persistence
+  const { loadGameState, clearGameState } = useGameStatePersistence()
+
+  // Load game state to check if user played
+  const gameState = loadGameState()
 
   // Fetch waitlist stats
   const { data: stats } = useQuery<WaitlistStats>({
@@ -25,15 +32,27 @@ export default function SignupSection() {
   // Signup mutation
   const signupMutation = useMutation({
     mutationFn: async (email: string) => {
-      const response = await axios.post('/api/waitlist', {
+      // Include game stats if user played
+      const payload: any = {
         email,
         source: 'landing_page',
-      })
+      }
+
+      if (gameState) {
+        payload.game_played = true
+        payload.final_bankroll = gameState.bankroll
+        payload.total_bets = gameState.totalBets
+        payload.win_rate = gameState.winRate
+      }
+
+      const response = await axios.post('/api/waitlist', payload)
       return response.data
     },
     onSuccess: () => {
       setSubmitted(true)
       setEmail('')
+      // Clear game state from localStorage after successful signup
+      clearGameState()
     },
   })
 
@@ -59,6 +78,45 @@ export default function SignupSection() {
                   Be among the first to experience professional prediction market trading
                 </p>
               </div>
+
+              {/* Game Stats Preview */}
+              {gameState && gameState.totalBets > 0 && (
+                <div className="mb-6 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded">
+                  <div className="text-center mb-3">
+                    <p className="text-sm font-semibold text-foreground mb-1">
+                      Save Your Game Progress
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Join the waitlist to save your stats and get early access
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <div className={`text-lg font-bold font-mono ${
+                        gameState.bankroll > 1000 ? 'text-positive' :
+                        gameState.bankroll < 1000 ? 'text-negative' : 'text-foreground'
+                      }`}>
+                        ${gameState.bankroll.toFixed(0)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Balance</div>
+                    </div>
+                    <div className="text-center">
+                      <div className={`text-lg font-bold font-mono ${
+                        gameState.winRate >= 50 ? 'text-positive' : 'text-negative'
+                      }`}>
+                        {gameState.winRate}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">Win Rate</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold font-mono text-foreground">
+                        {gameState.totalBets}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Bets</div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="max-w-md mx-auto mb-8">
@@ -135,7 +193,18 @@ export default function SignupSection() {
                 You're on the list!
               </h3>
               <p className="text-muted-foreground mb-8">
-                We'll send you an email when we launch. Get ready to trade like a pro.
+                {gameState && gameState.totalBets > 0 ? (
+                  <>
+                    Your game stats have been saved! We'll send you an email when we launch.
+                    {gameState.winRate >= 50 && gameState.bankroll > 1000 && (
+                      <span className="block mt-2 text-positive font-semibold">
+                        Great performance - {gameState.winRate}% win rate!
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  "We'll send you an email when we launch. Get ready to trade like a pro."
+                )}
               </p>
               <button
                 onClick={() => setSubmitted(false)}

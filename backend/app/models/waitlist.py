@@ -8,6 +8,12 @@ class WaitlistSignupBase(SQLModel):
     email: str = Field(unique=True, index=True, max_length=255)
     source: Optional[str] = Field(default="landing_page", max_length=50)
 
+    # Game statistics fields (optional - only populated if user played the game)
+    game_played: Optional[bool] = Field(default=False)
+    final_bankroll: Optional[float] = Field(default=None)  # Final virtual balance
+    total_bets: Optional[int] = Field(default=None)  # Number of predictions made
+    win_rate: Optional[float] = Field(default=None)  # Percentage of correct predictions (0-100)
+
 
 class WaitlistSignup(WaitlistSignupBase, table=True):
     """Waitlist signup model for database"""

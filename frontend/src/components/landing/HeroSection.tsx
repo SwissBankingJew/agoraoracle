@@ -1,4 +1,59 @@
+import { useState, useEffect } from 'react'
+import { PriceChart, BettingControls, GameStats, BetHistory } from '../game'
+import { useBinanceWebSocket } from '@/hooks/useBinanceWebSocket'
+import { useWaitlistGame } from '@/hooks/useWaitlistGame'
+import { useGameStatePersistence } from '@/hooks/useGameStatePersistence'
+
 export default function HeroSection() {
+  const [isGameStarted, setIsGameStarted] = useState(false)
+
+  // localStorage persistence
+  const { saveGameState, loadGameState } = useGameStatePersistence()
+
+  // WebSocket connection for real-time BTC prices
+  const {
+    currentPrice,
+    priceHistory,
+    isConnected,
+    error,
+    connect,
+    disconnect
+  } = useBinanceWebSocket()
+
+  // Game state management with localStorage persistence
+  const {
+    gameState,
+    placeBet,
+    canPlaceBet,
+    isSettling,
+    timeRemaining
+  } = useWaitlistGame({
+    currentPrice,
+    isConnected,
+    initialState: loadGameState() || undefined
+  })
+
+  const handleStartGame = () => {
+    setIsGameStarted(true)
+    // Connect to Binance WebSocket when game starts
+    connect()
+  }
+
+  // Auto-save game state to localStorage whenever it changes
+  useEffect(() => {
+    if (isGameStarted && gameState.totalBets > 0) {
+      saveGameState(gameState)
+    }
+  }, [gameState, isGameStarted, saveGameState])
+
+  // Cleanup WebSocket on unmount
+  useEffect(() => {
+    return () => {
+      if (isGameStarted) {
+        disconnect()
+      }
+    }
+  }, [isGameStarted, disconnect])
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-16">
       {/* Background gradient */}
@@ -57,25 +112,101 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* Terminal Preview mockup placeholder */}
+        {/* Bitcoin Game Dashboard */}
         <div className="mt-16 panel p-2">
           <div className="panel-header flex items-center justify-between mb-0">
-            <span>MARKET ANALYTICS</span>
+            <span>BITCOIN PREDICTION GAME</span>
             <div className="flex items-center space-x-1">
               <div className="w-2 h-2 rounded-full bg-red-500"></div>
               <div className="w-2 h-2 rounded-full bg-amber-500"></div>
               <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
             </div>
           </div>
-          <div className="bg-slate-950 p-8 flex items-center justify-center min-h-[400px] border-t border-slate-800">
-            <div className="text-center">
-              <div className="inline-block animate-pulse">
-                <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+
+          {!isGameStarted ? (
+            /* Initial State - Start Game */
+            <div className="bg-slate-950 p-12 flex items-center justify-center min-h-[400px] border-t border-slate-800">
+              <div className="text-center max-w-2xl space-y-6">
+                <div className="text-6xl mb-4">🎮</div>
+                <h3 className="text-2xl font-bold text-foreground">
+                  Try It Now - Bitcoin Prediction Game
+                </h3>
+                <p className="text-muted-foreground">
+                  Practice trading with $1,000 virtual cash and real-time Bitcoin prices.
+                  No signup required to play.
+                </p>
+
+                <button
+                  onClick={handleStartGame}
+                  className="btn-primary bg-primary hover:bg-primary/80 px-8 py-4 text-lg font-bold mt-4"
+                >
+                  Start Game - Free Trial
+                </button>
+
+                <div className="grid grid-cols-3 gap-6 pt-6">
+                  <div className="space-y-1">
+                    <div className="text-xl">💰</div>
+                    <div className="text-xs text-foreground font-semibold">$1,000 Virtual Cash</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xl">📊</div>
+                    <div className="text-xs text-foreground font-semibold">Real-Time Data</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xl">⚡</div>
+                    <div className="text-xs text-foreground font-semibold">3s Settlement</div>
+                  </div>
+                </div>
               </div>
-              <p className="text-sm font-mono text-cyan-400">Terminal Dashboard Preview</p>
-              <p className="text-xs text-muted-foreground mt-2">Coming Soon</p>
             </div>
-          </div>
+          ) : (
+            /* Active Game State */
+            <div className="bg-slate-950 p-6 border-t border-slate-800">
+              {/* WebSocket Error Display */}
+              {error && (
+                <div className="mb-4 p-3 bg-negative/10 border border-negative/20 rounded">
+                  <p className="text-sm text-negative">{error}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Left Column: Chart & Controls */}
+                <div className="lg:col-span-2 space-y-4">
+                  <PriceChart
+                    priceHistory={priceHistory}
+                    currentPrice={currentPrice}
+                    activeBet={gameState.activeBet}
+                    isConnected={isConnected}
+                  />
+                  <BettingControls
+                    bankroll={gameState.bankroll}
+                    onBet={placeBet}
+                    disabled={!canPlaceBet}
+                    activeBet={gameState.activeBet}
+                    timeRemaining={timeRemaining}
+                  />
+                </div>
+
+                {/* Right Column: Stats & History */}
+                <div className="space-y-4">
+                  <GameStats
+                    bankroll={gameState.bankroll}
+                    winRate={gameState.winRate}
+                    totalBets={gameState.totalBets}
+                    currentPrice={currentPrice}
+                  />
+                  <BetHistory betHistory={gameState.betHistory} />
+                </div>
+              </div>
+
+              {/* CTA to Save Progress */}
+              <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded text-center">
+                <p className="text-sm text-foreground font-semibold">
+                  💾 Join our waitlist below to save your progress and get early access
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
