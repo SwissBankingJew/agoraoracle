@@ -61,28 +61,6 @@ const PriceChart: React.FC<PriceChartProps> = ({
   }, [last3SecondsData]);
 
   /**
-   * Find the data point closest to the bet entry time
-   */
-  const betEntryPoint = useMemo(() => {
-    if (!activeBet || enrichedData.length === 0) return null;
-
-    // Find the closest data point to the entry time
-    const closestPoint = enrichedData.reduce((closest, point) => {
-      const currentDiff = Math.abs(point.timestamp - activeBet.entryTime);
-      const closestDiff = Math.abs(closest.timestamp - activeBet.entryTime);
-      return currentDiff < closestDiff ? point : closest;
-    }, enrichedData[0]);
-
-    console.log('Bet Entry Point:', {
-      betTime: new Date(activeBet.entryTime).toISOString(),
-      closestTime: closestPoint.time,
-      diff: Math.abs(closestPoint.timestamp - activeBet.entryTime)
-    });
-
-    return closestPoint;
-  }, [activeBet, enrichedData]);
-
-  /**
    * Get bet marker colors based on direction
    */
   const betMarkerColor = useMemo(() => {
