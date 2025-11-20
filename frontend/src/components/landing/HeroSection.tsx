@@ -128,7 +128,6 @@ export default function HeroSection() {
             /* Initial State - Start Game */
             <div className="bg-slate-950 p-12 flex items-center justify-center min-h-[400px] border-t border-slate-800">
               <div className="text-center max-w-2xl space-y-6">
-                <div className="text-6xl mb-4">🎮</div>
                 <h3 className="text-2xl font-bold text-foreground">
                   Try It Now - Bitcoin Prediction Game
                 </h3>
@@ -146,15 +145,12 @@ export default function HeroSection() {
 
                 <div className="grid grid-cols-3 gap-6 pt-6">
                   <div className="space-y-1">
-                    <div className="text-xl">💰</div>
                     <div className="text-xs text-foreground font-semibold">$1,000 Virtual Cash</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xl">📊</div>
                     <div className="text-xs text-foreground font-semibold">Real-Time Data</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-xl">⚡</div>
                     <div className="text-xs text-foreground font-semibold">3s Settlement</div>
                   </div>
                 </div>
@@ -203,7 +199,7 @@ export default function HeroSection() {
               {/* CTA to Save Progress */}
               <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded text-center">
                 <p className="text-sm text-foreground font-semibold">
-                  💾 Join our waitlist below to save your progress and get early access
+                  Join our waitlist below to save your progress and get early access
                 </p>
               </div>
             </div>

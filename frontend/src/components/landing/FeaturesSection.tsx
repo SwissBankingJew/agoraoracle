@@ -3,37 +3,31 @@ export default function FeaturesSection() {
     {
       title: "AI-Powered Strategy Configuration",
       description: "Natural language trading strategy setup powered by advanced LLMs. Just describe your approach and get validated, optimized parameters instantly.",
-      icon: "🤖",
       stats: "3 Curated Strategies"
     },
     {
       title: "Bloomberg Terminal Aesthetic",
       description: "Professional-grade interface designed for serious traders. High information density with real-time updates and institutional-quality visualizations.",
-      icon: "📊",
       stats: "Real-Time Analytics"
     },
     {
       title: "Advanced Market Intelligence",
       description: "AI-generated insights with confidence scoring. Track strong signals, trending markets, and dip opportunities across 500+ prediction markets.",
-      icon: "🎯",
       stats: "500+ Markets"
     },
     {
       title: "Real-Time Data Streaming",
       description: "Live price feeds with WebSocket integration. Auto-reconnection, sub-second latency, and comprehensive market data for informed decision-making.",
-      icon: "⚡",
       stats: "Sub-Second Updates"
     },
     {
       title: "Portfolio Management",
       description: "Track your positions with real-time P&L, equity curves, and risk metrics. Sharpe ratio, max drawdown, and win rate analytics built-in.",
-      icon: "💼",
       stats: "Institutional Metrics"
     },
     {
       title: "Kelly Criterion Bet Sizing",
       description: "Mathematical optimal position sizing based on your edge and risk profile. Conservative, balanced, or aggressive presets for every trader.",
-      icon: "🎲",
       stats: "Optimal Sizing"
     }
   ]
@@ -60,9 +54,8 @@ export default function FeaturesSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
             <div key={index} className="panel p-6 hover:border-cyan-500/30 transition-colors">
-              {/* Icon & Title */}
+              {/* Title */}
               <div className="flex items-start justify-between mb-4">
-                <div className="text-4xl mb-4">{feature.icon}</div>
                 <span className="badge badge-primary font-mono text-xs">{feature.stats}</span>
               </div>
 
